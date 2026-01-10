@@ -16,12 +16,12 @@ const adminNavItems: NavItem[] = [
   {
     icon: <GridIcon />,
     name: "Dashboard",
-    path: "/admin",
+    path: "/admin-new",
   },
   {
     icon: <UserCircleIcon />,
     name: "Register Member",
-    path: "/admin/register-member",
+    path: "/admin-new/register-member",
   },
 ];
 

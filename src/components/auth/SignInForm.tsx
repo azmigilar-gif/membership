@@ -28,6 +28,7 @@ export default function SignInForm() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: 'include',
         body: JSON.stringify({ email, password }),
       });
 
@@ -35,15 +36,20 @@ export default function SignInForm() {
 
       if (!response.ok) {
         setError(data.error || "Login failed");
+        setLoading(false);
         return;
       }
 
       // Redirect based on role
-      const dashboardUrl = data.user.role === "admin" ? "/admin" : "/member";
+      const dashboardUrl = data.user.role === "admin" ? "/admin-new" : "/member";
+      
+      // Add a small delay to ensure cookie is set before redirecting
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       router.push(dashboardUrl);
+      router.refresh();
     } catch (err) {
       setError("An error occurred. Please try again.");
-    } finally {
       setLoading(false);
     }
   };

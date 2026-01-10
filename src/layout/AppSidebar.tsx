@@ -30,73 +30,19 @@ const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
     name: "Dashboard",
-    subItems: [{ name: "Ecommerce", path: "/", pro: false }],
+    path: "/member",
   },
-  {
-    icon: <CalenderIcon />,
-    name: "Calendar",
-    path: "/calendar",
-  },
-  {
-    icon: <UserCircleIcon />,
-    name: "User Profile",
-    path: "/profile",
-  },
-
-  {
-    name: "Forms",
-    icon: <ListIcon />,
-    subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
-  },
-  {
-    name: "Tables",
-    icon: <TableIcon />,
-    subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
-  },
-  {
-    name: "Pages",
-    icon: <PageIcon />,
-    subItems: [
-      { name: "Blank Page", path: "/blank", pro: false },
-      { name: "404 Error", path: "/error-404", pro: false },
-    ],
-  },
+  
 ];
 
 const othersItems: NavItem[] = [
-  {
-    icon: <PieChartIcon />,
-    name: "Charts",
-    subItems: [
-      { name: "Line Chart", path: "/line-chart", pro: false },
-      { name: "Bar Chart", path: "/bar-chart", pro: false },
-    ],
-  },
-  {
-    icon: <BoxCubeIcon />,
-    name: "UI Elements",
-    subItems: [
-      { name: "Alerts", path: "/alerts", pro: false },
-      { name: "Avatar", path: "/avatars", pro: false },
-      { name: "Badge", path: "/badge", pro: false },
-      { name: "Buttons", path: "/buttons", pro: false },
-      { name: "Images", path: "/images", pro: false },
-      { name: "Videos", path: "/videos", pro: false },
-    ],
-  },
-  {
-    icon: <PlugInIcon />,
-    name: "Authentication",
-    subItems: [
-      { name: "Sign In", path: "/signin", pro: false },
-      { name: "Sign Up", path: "/signup", pro: false },
-    ],
-  },
+  
 ];
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const pathname = usePathname();
+  const [dashboardPath, setDashboardPath] = useState('/member');
 
   const renderMenuItems = (
     navItems: NavItem[],
@@ -141,12 +87,12 @@ const AppSidebar: React.FC = () => {
                 />
               )}
             </button>
-          ) : (
+            ) : (
             nav.path && (
               <Link
-                href={nav.path}
+                href={nav.name === 'Dashboard' ? dashboardPath : nav.path}
                 className={`menu-item group ${
-                  isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
+                  isActive(nav.name === 'Dashboard' ? dashboardPath : nav.path) ? "menu-item-active" : "menu-item-inactive"
                 }`}
               >
                 <span
@@ -237,6 +183,19 @@ const AppSidebar: React.FC = () => {
    const isActive = useCallback((path: string) => path === pathname, [pathname]);
 
   useEffect(() => {
+    // determine dashboard path based on current user role
+    async function loadRole() {
+      try {
+        const res = await fetch('/api/auth/me', { credentials: 'include' });
+        if (!res.ok) return;
+        const json = await res.json();
+        const role = json?.user?.role;
+        setDashboardPath(role === 'admin' ? '/admin-new' : '/member');
+      } catch (err) {
+        // ignore
+      }
+    }
+    loadRole();
     // Check if the current path matches any submenu item
     let submenuMatched = false;
     ["main", "others"].forEach((menuType) => {
@@ -310,22 +269,11 @@ const AppSidebar: React.FC = () => {
       >
         <Link href="/">
           {isExpanded || isHovered || isMobileOpen ? (
-            <>
-              <Image
-                className="dark:hidden"
-                src="/images/logo/logo.svg"
-                alt="Logo"
-                width={150}
-                height={40}
-              />
-              <Image
-                className="hidden dark:block"
-                src="/images/logo/logo-dark.svg"
-                alt="Logo"
-                width={150}
-                height={40}
-              />
-            </>
+            <div className="flex items-center gap-3">
+              <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                Dunzz Membership
+              </span>
+            </div>
           ) : (
             <Image
               src="/images/logo/logo-icon.svg"
@@ -357,19 +305,7 @@ const AppSidebar: React.FC = () => {
             </div>
 
             <div className="">
-              <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
-                }`}
-              >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  "Others"
-                ) : (
-                  <HorizontaLDots />
-                )}
-              </h2>
+              
               {renderMenuItems(othersItems, "others")}
             </div>
           </div>

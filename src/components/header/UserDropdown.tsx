@@ -45,7 +45,7 @@ export default function UserDropdown() {
   const handleLogout = async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
-      router.push("/signin");
+      router.push("/login");
     } catch (error) {
       console.error("Logout failed:", error);
     }
@@ -60,7 +60,7 @@ export default function UserDropdown() {
           <Image
             width={44}
             height={44}
-            src="/images/user/owner.jpg"
+            src="/images/user/owner.png"
             alt="User"
           />
         </span>
@@ -107,7 +107,7 @@ export default function UserDropdown() {
         </div>
 
         <ul className="flex flex-col gap-1 pt-4 pb-3 border-b border-gray-200 dark:border-gray-800">
-          <li>
+          {/* <li>
             <DropdownItem
               onItemClick={closeDropdown}
               tag="a"
@@ -131,8 +131,8 @@ export default function UserDropdown() {
               </svg>
               Edit profile
             </DropdownItem>
-          </li>
-          <li>
+          </li> */}
+          {/* <li>
             <DropdownItem
               onItemClick={closeDropdown}
               tag="a"
@@ -156,8 +156,8 @@ export default function UserDropdown() {
               </svg>
               Account settings
             </DropdownItem>
-          </li>
-          <li>
+          </li> */}
+          {/* <li>
             <DropdownItem
               onItemClick={closeDropdown}
               tag="a"
@@ -181,7 +181,7 @@ export default function UserDropdown() {
               </svg>
               Support
             </DropdownItem>
-          </li>
+          </li> */}
         </ul>
         <button
           onClick={() => {
