@@ -33,7 +33,8 @@ export default function AdminNewAddUser() {
         return;
       }
 
-      router.push('/admin-new');
+      await router.push('/admin-new');
+      router.refresh();
     } catch (err) {
       setError('An error occurred');
     } finally {
