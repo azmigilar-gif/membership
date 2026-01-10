@@ -2,50 +2,59 @@
 
 /**
  * Database Migration Script
- * Run this once to set up the users table in your Neon database
+ * Set up MongoDB collections and indexes
  * 
  * Usage:
- * npx ts-node scripts/migrate.ts
+ * npx ts-node scripts/migrate.ts (uses MONGODB_URI from .env.local)
  */
 
-import pool from '@/lib/db';
+import { MongoClient } from 'mongodb';
+
+const MONGODB_URI = process.env.MONGODB_URI || '';
+
+if (!MONGODB_URI) {
+  console.error('❌ MONGODB_URI is not set in environment variables');
+  process.exit(1);
+}
 
 async function migrate() {
+  const client = new MongoClient(MONGODB_URI);
+
   try {
-    console.log('Starting database migration...');
+    console.log('🔄 Starting database migration...');
+    
+    await client.connect();
+    console.log('✅ Connected to MongoDB');
 
-    // Create users table
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS users (
-        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-        email TEXT NOT NULL UNIQUE,
-        password_hash TEXT NOT NULL,
-        role VARCHAR(16) NOT NULL DEFAULT 'member',
-        is_active BOOLEAN NOT NULL DEFAULT true,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        last_login TIMESTAMPTZ
-      );
-    `);
+    const db = client.db('membership');
 
-    console.log('✓ Users table created successfully');
+    // Create users collection if it doesn't exist
+    const collections = await db.listCollections().toArray();
+    const usersCollectionExists = collections.some(c => c.name === 'users');
 
-    // Create index on email
-    await pool.query(`
-      CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
-    `);
+    if (!usersCollectionExists) {
+      await db.createCollection('users');
+      console.log('✅ Users collection created');
+    } else {
+      console.log('✅ Users collection already exists');
+    }
 
-    console.log('✓ Email index created');
+    // Create unique index on email
+    const usersCollection = db.collection('users');
+    await usersCollection.createIndex({ email: 1 }, { unique: true });
+    console.log('✅ Email index created');
 
-    console.log('\n✓ Migration completed successfully!');
+    console.log('\n✨ Migration completed successfully!');
     console.log('\nNext steps:');
-    console.log('1. Set your JWT_SECRET environment variable');
-    console.log('2. Run: node scripts/seed.js (to create initial admin user)');
+    console.log('1. Run: node scripts/seed.js');
+    console.log('2. This will create the admin user');
 
     process.exit(0);
   } catch (error) {
-    console.error('✗ Migration failed:', error);
+    console.error('❌ Migration failed:', error);
     process.exit(1);
+  } finally {
+    await client.close();
   }
 }
 

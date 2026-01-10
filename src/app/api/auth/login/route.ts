@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db';
-import { hashPassword, comparePasswords } from '@/lib/auth';
+import { getCollection } from '@/lib/db';
+import { comparePasswords } from '@/lib/auth';
 import { signToken } from '@/lib/jwt';
+import { ObjectId } from 'mongodb';
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,20 +16,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch user from database
-    const result = await query(
-      'SELECT id, email, password_hash, role, is_active FROM users WHERE email = $1',
-      [email]
-    );
+    // Fetch user from MongoDB
+    const usersCollection = await getCollection('users');
+    const user = await usersCollection.findOne({ email });
 
-    if (result.rows.length === 0) {
+    if (!user) {
       return NextResponse.json(
         { error: 'Invalid email or password' },
         { status: 401 }
       );
     }
-
-    const user = result.rows[0];
 
     // Check if user is active
     if (!user.is_active) {
@@ -48,14 +45,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Update last login
-    await query(
-      'UPDATE users SET last_login = NOW() WHERE id = $1',
-      [user.id]
+    await usersCollection.updateOne(
+      { _id: user._id },
+      { $set: { last_login: new Date() } }
     );
 
     // Create JWT token
     const token = signToken({
-      id: user.id,
+      id: user._id.toString(),
       email: user.email,
       role: user.role,
     });
@@ -65,7 +62,7 @@ export async function POST(request: NextRequest) {
       {
         message: 'Login successful',
         user: {
-          id: user.id,
+          id: user._id.toString(),
           email: user.email,
           role: user.role,
         },

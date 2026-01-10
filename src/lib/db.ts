@@ -1,25 +1,40 @@
-import { Pool } from 'pg';
+import { MongoClient, Db, Collection } from 'mongodb';
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-});
+let cachedClient: MongoClient | null = null;
+let cachedDb: Db | null = null;
 
-export async function query(text: string, params?: any[]) {
-  const start = Date.now();
-  try {
-    const res = await pool.query(text, params);
-    const duration = Date.now() - start;
-    console.log('Executed query', { text, duration, rows: res.rowCount });
-    return res;
-  } catch (error) {
-    console.error('Database query error', { text, error });
-    throw error;
+const MONGODB_URI = process.env.MONGODB_URI || '';
+
+if (!MONGODB_URI) {
+  throw new Error('MONGODB_URI is not set');
+}
+
+export async function connectToDatabase() {
+  if (cachedClient && cachedDb) {
+    return { client: cachedClient, db: cachedDb };
+  }
+
+  const client = new MongoClient(MONGODB_URI);
+  await client.connect();
+  const db = client.db('membership');
+
+  cachedClient = client;
+  cachedDb = db;
+
+  return { client, db };
+}
+
+export async function getCollection(collectionName: string): Promise<Collection> {
+  const { db } = await connectToDatabase();
+  return db.collection(collectionName);
+}
+
+export async function closeConnection() {
+  if (cachedClient) {
+    await cachedClient.close();
+    cachedClient = null;
+    cachedDb = null;
   }
 }
 
-export async function getClient() {
-  return pool.connect();
-}
-
-export default pool;
+export default connectToDatabase;

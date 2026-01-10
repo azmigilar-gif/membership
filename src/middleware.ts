@@ -16,7 +16,7 @@ export function middleware(request: NextRequest) {
   const isPublicRoute = publicRoutes.some(route => pathname.includes(route));
 
   // If accessing admin routes, verify token
-  if (pathname.startsWith('/admin') || pathname.startsWith('/(admin)')) {
+  if (pathname.startsWith('/admin')) {
     if (!token) {
       return NextResponse.redirect(new URL('/signin', request.url));
     }
@@ -27,7 +27,7 @@ export function middleware(request: NextRequest) {
     }
 
     // Admin routes require admin role
-    if (!pathname.includes('profile') && payload.role !== 'admin') {
+    if (payload.role !== 'admin') {
       return NextResponse.redirect(new URL('/member', request.url));
     }
   }
