@@ -10,8 +10,28 @@ export default function AdminNewAddUser() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("member");
   const [benefit, setBenefit] = useState("");
+  const [freePlayHours, setFreePlayHours] = useState<number | null>(null);
+  const [overnightRentals, setOvernightRentals] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const benefitDefaults: Record<string, { hours: number; rentals: number }> = {
+    platinum: { hours: 24, rentals: 1 },
+    diamond: { hours: 48, rentals: 2 },
+    ultimate: { hours: 120, rentals: 5 },
+  };
+
+  const handleBenefitChange = (value: string) => {
+    setBenefit(value);
+    if (value && benefitDefaults[value]) {
+      const defaults = benefitDefaults[value];
+      setFreePlayHours(defaults.hours);
+      setOvernightRentals(defaults.rentals);
+    } else {
+      setFreePlayHours(null);
+      setOvernightRentals(null);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,7 +43,15 @@ export default function AdminNewAddUser() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ name, email, password, role, benefit: benefit || null }),
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          role,
+          benefit: benefit || null,
+          free_play_hours: freePlayHours,
+          overnight_rentals_used: overnightRentals,
+        }),
       });
 
       const data = await res.json();
@@ -54,12 +82,24 @@ export default function AdminNewAddUser() {
           <option value="member">member</option>
           <option value="admin">admin</option>
         </select>
-        <select value={benefit} onChange={e=>setBenefit(e.target.value)} className="w-full p-2 border">
+        <select value={benefit} onChange={e=>handleBenefitChange(e.target.value)} className="w-full p-2 border">
           <option value="">-- no benefit --</option>
-          <option value="silver">silver</option>
-          <option value="gold">gold</option>
-          <option value="platinum">platinum</option>
+          <option value="platinum">platinum (24h, 1x)</option>
+          <option value="diamond">diamond (48h, 2x)</option>
+          <option value="ultimate">ultimate (120h, 5x)</option>
         </select>
+        {benefit && (
+          <>
+            <div>
+              <label className="block text-sm font-medium mb-1">Free play hours</label>
+              <input type="number" value={freePlayHours ?? ''} onChange={e=>setFreePlayHours(e.target.value === '' ? null : Number(e.target.value))} className="w-full p-2 border" placeholder="0" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Overnight rentals</label>
+              <input type="number" value={overnightRentals ?? ''} onChange={e=>setOvernightRentals(e.target.value === '' ? null : Number(e.target.value))} className="w-full p-2 border" placeholder="0" />
+            </div>
+          </>
+        )}
         <div>
           <button type="submit" disabled={loading} className="px-4 py-2 bg-blue-600 text-white rounded">
             {loading ? 'Creating...' : 'Create user'}

@@ -12,9 +12,9 @@ type FormData = {
 };
 
 const benefits = [
-  { value: "silver", label: "Silver" },
-  { value: "gold", label: "Gold" },
-  { value: "platinum", label: "Platinum" },
+  { value: "platinum", label: "Platinum Benefit" },
+  { value: "diamond", label: "Diamond Benefit" },
+  { value: "ultimate", label: "Ultimate Gold" },
 ];
 
 export default function RegisterMemberForm() {
@@ -23,7 +23,7 @@ export default function RegisterMemberForm() {
     name: "",
     email: "",
     password: "",
-    benefit: "silver",
+    benefit: "platinum",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");

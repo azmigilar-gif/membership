@@ -5,7 +5,7 @@ import { getCollection } from '@/lib/db';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, email, password, role, benefit, free_play_hours, overnight_rentals_used } = body;
+    const { name, email, password, role, benefit } = body;
 
     if (!name || !email || !password || !role) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
@@ -23,34 +23,16 @@ export async function POST(request: NextRequest) {
 
     const password_hash = await hashPassword(password);
 
-    const now = new Date();
-    const expiry = new Date(now);
-    expiry.setDate(now.getDate() + 30);
-
     const doc: any = {
       name,
       email,
       password_hash,
       role,
       is_active: true,
-      created_at: now,
-      updated_at: now,
+      created_at: new Date(),
+      updated_at: new Date(),
     };
-
-    if (benefit) {
-      doc.benefit = benefit;
-      doc.subscription_start = now;
-      doc.subscription_expiry = expiry;
-      doc.subscription_status = 'active';
-    }
-
-    if (typeof free_play_hours !== 'undefined' && free_play_hours !== null) {
-      doc.free_play_hours = Number(free_play_hours);
-    }
-
-    if (typeof overnight_rentals_used !== 'undefined' && overnight_rentals_used !== null) {
-      doc.overnight_rentals_used = Number(overnight_rentals_used);
-    }
+    if (benefit) doc.benefit = benefit;
 
     const result = await usersCollection.insertOne(doc);
 
