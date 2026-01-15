@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCollection } from "@/lib/db";
 import { ObjectId } from "mongodb";
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    let { id } = params || ({} as { id?: string });
+    const { id: paramId } = await params;
+    let id = paramId;
     // fallback: try to extract id from the request URL if params is not provided
     if (!id) {
       try {
@@ -81,9 +82,9 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   }
 }
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const usersCollection = await getCollection("users");
     // Try ObjectId then string id
     let user: any = null;
